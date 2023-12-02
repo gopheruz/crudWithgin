@@ -1,6 +1,8 @@
 package postgres
 
 import (
+	"database/sql"
+	"errors"
 	"ginApi/storage/repo"
 
 	"github.com/jmoiron/sqlx"
@@ -18,7 +20,7 @@ func NewUser(db *sqlx.DB) repo.UserStorageI {
 func (ur *USerRepo) Create(u *repo.User) (*repo.User, error) {
 	row := ur.db.QueryRow(`
 	INSERT INTO users (id, first_name, last_name, email, created_at, deleted_at)
-	VALUES ($1, $2, $3, $4, $5, $6) RETURNING *
+	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, first_name, last_name, email, created_at, deleted_at
 	`,
 		u.ID,
 		u.FirstName,
@@ -98,17 +100,56 @@ func (ur *USerRepo) Update(u *repo.UpdateUser) (*repo.User, error) {
 }
 
 func (ur *USerRepo) Delete(id string) error {
-	query := `
-	UPDATE users
-SET deleted_at = CURRENT_TIMESTAMP
-WHERE id = $1;
+	var psqlID string
+	var psqlEmail string
 
-	`
-	_, err := ur.db.Query(query, id)
+	rowsId, err := ur.db.Query("SELECT id FROM users WHERE id=$1 AND deleted_at IS NULL", id)
 	if err != nil {
 		return err
 	}
-	return err
+	for rowsId.Next() {
+		if err := rowsId.Scan(&psqlID); err != nil {
+			return err
+		}
+	}
+	if err := rowsId.Err(); err != nil {
+		return err
+	}
+	if psqlID == "" {
+		return errors.New("ID not found in the database maybe alreadey deleted")
+	}
+
+	rowsEmail, err := ur.db.Query("SELECT email FROM users WHERE id=$1", id)
+	if err != nil {
+		return err
+	}
+	defer rowsEmail.Close()
+	for rowsEmail.Next() {
+		if err := rowsEmail.Scan(&psqlEmail); err != nil {
+			return err
+		}
+	}
+	if err := rowsEmail.Err(); err != nil {
+		return err
+	}
+	if psqlEmail == "" {
+		return errors.New("email not found from database may be already deleted")
+	}
+
+	// Perform the update
+	query := `
+		UPDATE users
+		SET deleted_email = $1,
+		email = $2,
+		deleted_at = CURRENT_TIMESTAMP
+		WHERE id = $3;
+	`
+	_, err = ur.db.Exec(query, psqlEmail, sql.NullString{}, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (ur *USerRepo) GetByEmail(email string) (*repo.User, error) {

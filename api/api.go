@@ -23,7 +23,7 @@ func New(opt *RouterOptions) *gin.Engine {
 		Storage: opt.Storage,
 	})
 	v1Router := router.Group("/v1")
-	v1Router.POST("/create", handlerV1.CreateUSer)
+	v1Router.POST("/create", handlerV1.CreateUser)
 	v1Router.GET("/users/:id", handlerV1.GetUser)
 	v1Router.PUT("/update", handlerV1.Update)
 	v1Router.DELETE("/delete/:id", handlerV1.Delete)

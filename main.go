@@ -26,7 +26,7 @@ func main() {
 	// Construct the connection string
 	connStr := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		dbHost, dbPort, dbUser, dbPassword, dbName)
-
+	fmt.Println(connStr)
 	// Open a connection to the database
 	psqlConnection, err := sqlx.Connect("postgres", connStr)
 	if err != nil {
