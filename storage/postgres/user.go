@@ -110,3 +110,31 @@ WHERE id = $1;
 	}
 	return err
 }
+
+func (ur *USerRepo) GetByEmail(email string) (*repo.User, error) {
+	var result repo.User
+	query := `
+			SELECT
+			id,
+			first_name,
+			last_name,
+			email,
+			created_at,
+			deleted_at
+		FROM users
+		WHERE email = $1 AND deleted_at IS NULL;
+	`
+	row := ur.db.QueryRow(query, email)
+	err := row.Scan(
+		&result.ID,
+		&result.FirstName,
+		&result.LastName,
+		&result.Email,
+		&result.CreatedAt,
+		&result.DeletedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &result, err
+}

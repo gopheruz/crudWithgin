@@ -11,3 +11,8 @@ type UpdateUser struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 }
+type GetAllUsersParams struct {
+	Limit  int32  `json:"limit"`
+	Page   int32  `json:"page"`
+	Search string `json:"search"`
+}

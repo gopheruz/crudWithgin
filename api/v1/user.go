@@ -108,5 +108,25 @@ func (h handlerV1) Delete(ctx *gin.Context) {
 	ctx.JSON(200, gin.H{
 		"message": "User deleted",
 	})
+}
+
+func (h *handlerV1) GetByEmailHandler(ctx *gin.Context) {
+	email := ctx.Param("email")
+	if email == "" {
+		ctx.JSON(500, gin.H{
+			"message": "email not found from database",
+			"error":   "email not given by user or invalid request",
+		})
+		return
+	}
+	datbaseRsult, err := h.Storage.User().GetByEmail(email)
+	if err != nil {
+		ctx.JSON(500, gin.H{
+			"message": " error from database",
+			"err":     err.Error(),
+		})
+		return
+	}
+	ctx.JSON(200, datbaseRsult)
 
 }
