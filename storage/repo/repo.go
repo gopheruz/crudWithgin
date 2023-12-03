@@ -38,7 +38,7 @@ type UserStorageI interface {
 	Create(u *User) (*User, error)
 	Get(id string) (*User, error)
 	GetByEmail(email string) (*User, error)
-	// GetAll(params *GetAllUsersParams) (*GetAllUsersResult, error)
+	GetAll(params *GetAllUsersParams) (*GetAllUsersResult, error)
 	Update(u *UpdateUser) (*User, error)
 	Delete(id string) error
 }

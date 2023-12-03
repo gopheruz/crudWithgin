@@ -28,5 +28,6 @@ func New(opt *RouterOptions) *gin.Engine {
 	v1Router.PUT("/update", handlerV1.Update)
 	v1Router.DELETE("/delete/:id", handlerV1.Delete)
 	v1Router.GET("/getbyemail/:email", handlerV1.GetByEmailHandler)
+	v1Router.GET("/getall", handlerV1.GetAll)
 	return router
 }

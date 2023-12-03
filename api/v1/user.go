@@ -122,7 +122,7 @@ func (h *handlerV1) Update(ctx *gin.Context) {
 }
 
 func (h *handlerV1) Delete(ctx *gin.Context) {
-	 id := ctx.Param("id")
+	id := ctx.Param("id")
 	if id == "" {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "UserId not fount in url",
@@ -142,7 +142,7 @@ func (h *handlerV1) Delete(ctx *gin.Context) {
 		"message": "User deleted",
 	})
 }
-	
+
 func (h *handlerV1) GetByEmailHandler(ctx *gin.Context) {
 	email := ctx.Param("email")
 	if email == "" {
@@ -161,5 +161,30 @@ func (h *handlerV1) GetByEmailHandler(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(200, datbaseRsult)
+}
+
+func (h handlerV1) GetAll(ctx *gin.Context) {
+	var params models.GetAllUsersParams
+	if err := ctx.ShouldBindJSON(&params); err != nil {
+		ctx.JSON(500, gin.H{
+			"message": "filed to unmarshall JSON",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	users, err := h.Storage.User().GetAll(&repo.GetAllUsersParams{
+		Search: params.Search,
+		Limit:  params.Limit,
+		Page:   params.Page,
+	})
+	if err != nil{
+		ctx.JSON(500, gin.H{
+			"message": "Filed to get from database",
+			"error":   err.Error(),
+		})
+		return
+	}
+	ctx.JSON(200, users)
 
 }
