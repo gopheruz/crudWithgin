@@ -182,18 +182,18 @@ func (ur *USerRepo) GetByEmail(email string) (*repo.User, error) {
 }
 
 func (ur *USerRepo) GetAll(params *repo.GetAllUsersParams) (*repo.GetAllUsersResult, error) {
-    result := &repo.GetAllUsersResult{
-        Users: make([]*repo.User, 0),
-    }
+	result := &repo.GetAllUsersResult{
+		Users: make([]*repo.User, 0),
+	}
 
-    offset := (params.Page - 1) * params.Limit
-    limit := fmt.Sprintf("LIMIT %d OFFSET %d", params.Limit, offset)
-    filter := ""
-    if params.Search != "" {
-        str := "%" + params.Search + "%"
-        filter = fmt.Sprintf(`WHERE first_name ILIKE '%s' OR last_name ILIKE '%s' OR email ILIKE '%s'`, str, str, str)
-    }
-    query := `
+	offset := (params.Page - 1) * params.Limit
+	limit := fmt.Sprintf("LIMIT %d OFFSET %d", params.Limit, offset)
+	filter := ""
+	if params.Search != "" {
+		str := "%" + params.Search + "%"
+		filter = fmt.Sprintf(`WHERE first_name ILIKE '%s' OR last_name ILIKE '%s' OR email ILIKE '%s'`, str, str, str)
+	}
+	query := `
         SELECT
             id, 
             first_name,
@@ -202,33 +202,32 @@ func (ur *USerRepo) GetAll(params *repo.GetAllUsersParams) (*repo.GetAllUsersRes
             created_at
         FROM users ` + filter + ` ORDER BY created_at DESC ` + limit
 
-    rows, err := ur.db.Query(query)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
-    for rows.Next() {
-        var u repo.User
-        err := rows.Scan(
-            &u.ID,
-            &u.FirstName,
-            &u.LastName,
-            &u.Email,
-            &u.CreatedAt,
-        )
+	rows, err := ur.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var u repo.User
+		err := rows.Scan(
+			&u.ID,
+			&u.FirstName,
+			&u.LastName,
+			&u.Email,
+			&u.CreatedAt,
+		)
 		fmt.Println(u.DeletedAt)
-        if err != nil {
-            return nil, err
-        }
-        result.Users = append(result.Users, &u)
-    }
+		if err != nil {
+			return nil, err
+		}
+		result.Users = append(result.Users, &u)
+	}
 
-    queryCount := `SELECT count(1) FROM users ` + filter
-    err = ur.db.QueryRow(queryCount).Scan(&result.Count)
-    if err != nil {
-        return nil, err
-    }
+	queryCount := `SELECT count(1) FROM users ` + filter
+	err = ur.db.QueryRow(queryCount).Scan(&result.Count)
+	if err != nil {
+		return nil, err
+	}
 
-    return result, nil
+	return result, nil
 }
-

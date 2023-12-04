@@ -178,7 +178,7 @@ func (h handlerV1) GetAll(ctx *gin.Context) {
 		Limit:  params.Limit,
 		Page:   params.Page,
 	})
-	if err != nil{
+	if err != nil {
 		ctx.JSON(500, gin.H{
 			"message": "Filed to get from database",
 			"error":   err.Error(),
