@@ -2,6 +2,7 @@ package repo
 
 import (
 	"database/sql"
+	"ginApi/models"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,8 +31,8 @@ type GetAllUsersParams struct {
 }
 
 type GetAllUsersResult struct {
-	Users []*User
-	Count int32
+	Users []*models.User `json:"users"`
+	Count int32          `json:"count"`
 }
 
 type UserStorageI interface {

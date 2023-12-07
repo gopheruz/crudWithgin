@@ -13,6 +13,14 @@ import (
 	"github.com/lib/pq"
 )
 
+// @Router /create [post]
+// @Summary Create a user
+// @Description Create user
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param user body models.CreateUser true "CreateUser"
+// @Success 200 {object} models.User
 func (h *handlerV1) CreateUser(ctx *gin.Context) {
 	var user models.User
 	err := ctx.ShouldBindJSON(&user)
@@ -74,6 +82,15 @@ func (h *handlerV1) CreateUser(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusCreated, createdUser)
 }
+
+// @Router /users/{id} [get]
+// @Summary Get user by id
+// @Description Get user by id
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id path string true "ID"
+// @Success 200 {object} models.User
 func (h *handlerV1) GetUser(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {
@@ -91,10 +108,25 @@ func (h *handlerV1) GetUser(ctx *gin.Context) {
 		})
 		return
 	}
-	ctx.JSON(200, result)
+	ctx.JSON(200, models.User{
+		ID:        result.ID,
+		FirstName: result.FirstName,
+		LastName:  result.LastName,
+		Email:     result.Email,
+		CreatedAt: result.CreatedAt,
+	})
 
 }
 
+// @Router /update/{id} [put]
+// @Summary Update user by id
+// @Description Update user by id
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id path string true "ID"
+// @Param user body models.UpdateUser true "UpdateUser"
+// @Success 200 {object} models.User
 func (h *handlerV1) Update(ctx *gin.Context) {
 	var user models.UpdateUser
 	err := ctx.ShouldBindJSON(&user)
@@ -106,7 +138,7 @@ func (h *handlerV1) Update(ctx *gin.Context) {
 		return
 	}
 	result, err := h.Storage.User().Update(&repo.UpdateUser{
-		ID:        user.ID,
+		ID:        ctx.Param("id"),
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,
@@ -114,13 +146,26 @@ func (h *handlerV1) Update(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{
 			"message": "Internal server error",
-			"error":   err,
+			"error":   err.Error(),
 		})
 		return
 	}
-	ctx.JSON(200, result)
+	ctx.JSON(200, models.User{
+		ID:        result.ID,
+		FirstName: result.FirstName,
+		LastName:  result.LastName,
+		Email:     result.Email,
+		CreatedAt: result.CreatedAt,
+	})
 }
 
+// @Router /delete/{id} [delete]
+// @Summary Delete user by ID
+// @Description Delete user by ID
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param id path string true "id"
 func (h *handlerV1) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
 	if id == "" {
@@ -143,6 +188,14 @@ func (h *handlerV1) Delete(ctx *gin.Context) {
 	})
 }
 
+// @Router /getbyemail/{email} [get]
+// @Summary Get users by email
+// @Description Get user by email
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param email path string true "email"
+// @Success 200 {object} models.User
 func (h *handlerV1) GetByEmailHandler(ctx *gin.Context) {
 	email := ctx.Param("email")
 	if email == "" {
@@ -152,7 +205,7 @@ func (h *handlerV1) GetByEmailHandler(ctx *gin.Context) {
 		})
 		return
 	}
-	datbaseRsult, err := h.Storage.User().GetByEmail(email)
+	result, err := h.Storage.User().GetByEmail(email)
 	if err != nil {
 		ctx.JSON(500, gin.H{
 			"message": " error from database",
@@ -160,19 +213,32 @@ func (h *handlerV1) GetByEmailHandler(ctx *gin.Context) {
 		})
 		return
 	}
-	ctx.JSON(200, datbaseRsult)
+	ctx.JSON(200, models.User{
+		ID:        result.ID,
+		FirstName: result.FirstName,
+		LastName:  result.LastName,
+		Email:     result.Email,
+		CreatedAt: result.CreatedAt,
+	})
 }
 
+// @Router /getall [get]
+// @Summary Get all users
+// @Description Get all users
+// @Tags user
+// @Accept json
+// @Produce json
+// @Param filter query models.GetAllUsersParams  ture "GetAllUsersParams"
+// @Success 200 {object} models.GetAllUsersResult
 func (h handlerV1) GetAll(ctx *gin.Context) {
-	var params models.GetAllUsersParams
-	if err := ctx.ShouldBindJSON(&params); err != nil {
-		ctx.JSON(500, gin.H{
-			"message": "filed to unmarshall JSON",
+
+	params, err := ValidateGetAllParams(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"message": "bad request",
 			"error":   err.Error(),
 		})
-		return
 	}
-
 	users, err := h.Storage.User().GetAll(&repo.GetAllUsersParams{
 		Search: params.Search,
 		Limit:  params.Limit,

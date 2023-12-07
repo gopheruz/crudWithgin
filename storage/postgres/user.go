@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"ginApi/models"
 	"ginApi/storage/repo"
 
 	"github.com/jmoiron/sqlx"
@@ -83,7 +84,7 @@ func (ur *USerRepo) Update(u *repo.UpdateUser) (*repo.User, error) {
 		last_name = $2,
 		email = $3
 	WHERE id = $4
-	RETURNING *
+	RETURNING id, first_name, last_name, email, created_at, deleted_at
 	`
 	row := ur.db.QueryRow(query, u.FirstName, u.LastName, u.Email, u.ID)
 	err := row.Scan(
@@ -183,7 +184,7 @@ func (ur *USerRepo) GetByEmail(email string) (*repo.User, error) {
 
 func (ur *USerRepo) GetAll(params *repo.GetAllUsersParams) (*repo.GetAllUsersResult, error) {
 	result := &repo.GetAllUsersResult{
-		Users: make([]*repo.User, 0),
+		Users: make([]*models.User, 0),
 	}
 
 	offset := (params.Page - 1) * params.Limit
@@ -208,19 +209,25 @@ func (ur *USerRepo) GetAll(params *repo.GetAllUsersParams) (*repo.GetAllUsersRes
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var u repo.User
+		var resultu models.User
 		err := rows.Scan(
-			&u.ID,
-			&u.FirstName,
-			&u.LastName,
-			&u.Email,
-			&u.CreatedAt,
+			&resultu.ID,
+			&resultu.FirstName,
+			&resultu.LastName,
+			&resultu.Email,
+			&resultu.CreatedAt,
 		)
-		fmt.Println(u.DeletedAt)
+		
 		if err != nil {
 			return nil, err
 		}
-		result.Users = append(result.Users, &u)
+		result.Users = append(result.Users, &models.User{
+			ID: resultu.ID,
+			FirstName: resultu.FirstName,
+			LastName: resultu.LastName,
+			Email: resultu.Email,
+			CreatedAt: resultu.CreatedAt,
+		})
 	}
 
 	queryCount := `SELECT count(1) FROM users ` + filter
